@@ -1,0 +1,77 @@
+%2nd query:
+
+customerIdByUsername(Username, CustID) :-       
+    customer(CustID, Username).
+
+countOrdersOfCustomer(UName, Count) :-
+    customerIdByUsername(UName, CustID),  % Get the customer ID
+    countOrdersOfCustomerHelper(CustID, 1, Count).  % Start counting orders from 1
+
+countOrdersOfCustomerHelper(CustID, OrderID, Count) :-
+    order(CustID, OrderID, _),        % Check if there's an order for this customer with the current OrderID
+    NextOrderID is OrderID + 1,       % Move to the next order ID
+    countOrdersOfCustomerHelper(CustID, NextOrderID, TempCount), % Recursive call with the next order ID
+    Count is TempCount + 1.           % Increment count for each order
+
+countOrdersOfCustomerHelper(_, _, 0). % Base case: Stop recursion when there are no more orders
+
+
+
+%5th query:
+getSingleItemPrice(ItemName,_,Price):-
+	item(ItemName,_,Price).
+
+totalFees([], 0). % Base case: Total fees of an empty list is 0
+totalFees([Item|Rest], Total) :-
+    totalFees(Rest, RestTotal),             % Calculate the total fees of the rest of the items
+    getSingleItemPrice(Item, _, Price),     % Get the price of the current item
+    Total is RestTotal + Price.             % Calculate the total fees by adding the price of the current item
+
+gettingCustId(CId,CN):-
+	customer(CId, CN).
+
+calcPriceOfOrder(UName,OId,TotalPrice):-
+	gettingCustId(CId,UName),
+	order(CId,OId,Items),
+	totalFees(Items,TotalPrice).
+
+
+
+%7th query:
+
+getCompanyName(ItemName, CName):-     % Given the item name, get its company name
+    item(ItemName, CName, _).
+
+getJustification(CName, Just):-       % Given the company name, get its justification to boycott
+    boycott_company(CName, Just).
+
+whyToBoycott(ItemOrCompanyName, Justification):-
+    item(ItemOrCompanyName, _, _),         % Check if ItemOrCompanyName is an item name
+    getCompanyName(ItemOrCompanyName, CName),  % Get the company name for the item
+    getJustification(CName, Justification).     % Get the justification for boycotting the company
+
+whyToBoycott(ItemOrCompanyName, Justification):-
+    \+ item(ItemOrCompanyName, _, _),    % Check if ItemOrCompanyName is not an item name
+    getJustification(ItemOrCompanyName, Justification). % Get the justification for boycotting the company directly
+
+
+
+
+:- dynamic boycott_company/2,alternative/2,item/3. % Declare dynamic predicates
+
+%12th query:
+
+add_item(IName, CName, IPrice):-
+	assert(item(IName, CName, IPrice)).
+
+remove_item(IName, CName, IPrice):-
+	retract(item(IName, CName, IPrice)).
+
+add_boycott_company(CName,Just):-
+	assert(boycott_company(CName, Just)).
+
+add_alternative(ItemName,AlternativeItem):-
+	assert(alternative(ItemName,AlternativeItem)).
+	
+
+
