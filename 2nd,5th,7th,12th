@@ -16,6 +16,18 @@ countOrdersOfCustomerHelper(CustID, OrderID, Count) :-
 countOrdersOfCustomerHelper(_, _, 0). % Base case: Stop recursion when there are no more orders
 
 
+%3th query 
+getItemsInOrderById(CustomerName, OrderID, Items) :-
+    customer(CustomerID, CustomerName),
+    order(CustomerID, OrderID, Items).
+
+
+%4th query 
+getNumOfItems(CustomerName, OrderID, Count) :-
+    getItemsInOrderById(CustomerName, OrderID, Items),
+    length(Items, Count).
+
+
 
 %5th query:
 getSingleItemPrice(ItemName,_,Price):-
@@ -34,6 +46,15 @@ calcPriceOfOrder(UName,OId,TotalPrice):-
 	gettingCustId(CId,UName),
 	order(CId,OId,Items),
 	totalFees(Items,TotalPrice).
+
+
+
+%6th query 
+isBoycott(ItemName) :-
+    (   item(ItemName, CompanyName, _),
+        boycott_company(CompanyName, _)
+    ;   alternative(ItemName, _)
+    ).
 
 
 
@@ -57,7 +78,39 @@ whyToBoycott(ItemOrCompanyName, Justification):-
 
 
 
+%9th query 
+
+replaceBoycottItemsFromAnOrder(CustomerName, OrderID, NewList) :-
+    retractall(boycott_item(_)),
+    getItemsInOrderById(CustomerName, OrderID, OldList),
+    replaceBoycottItems(OldList, NewList).
+
+replaceBoycottItems([], []).
+replaceBoycottItems([Item|Rest], [Item|NewRest]) :-
+    \+ isBoycott(Item),
+    replaceBoycottItems(Rest, NewRest).
+    
+replaceBoycottItems([BoycottItem|Rest], [Alternative|NewRest]) :-
+    isBoycott(BoycottItem),
+    alternative(BoycottItem, Alternative),
+    replaceBoycottItems(Rest, NewRest).
+
+
+
+
+
+
+%11th query 
+getTheDifferenceInPriceBetweenItemAndAlternative(ItemName, AlternativeItem, DiffPrice) :-
+   alternative(ItemName, AlternativeItem),
+    item(ItemName, _, PriceItem),
+    item(AlternativeItem, _, PriceAlt),
+    DiffPrice is PriceAlt - PriceItem.
+
+
+
 :- dynamic boycott_company/2,alternative/2,item/3. % Declare dynamic predicates
+
 
 %12th query:
 
@@ -73,5 +126,9 @@ add_boycott_company(CName,Just):-
 add_alternative(ItemName,AlternativeItem):-
 	assert(alternative(ItemName,AlternativeItem)).
 	
+
+
+
+
 
 
