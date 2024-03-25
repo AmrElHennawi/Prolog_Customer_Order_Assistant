@@ -1,3 +1,27 @@
+
+:-consult('data.pl').
+
+% Define customer, order, item, alternative, and boycott_company predicates
+
+% Question 1: List all orders of a specific customer
+list_orders(CustUserName, Orders) :-
+	customer(CustID, CustUserName),
+	list_orders_helper(CustID, [], Orders).
+
+list_orders_helper(CustID, Acc, Orders) :-
+	order(CustID, OrderID, Items),
+	Order = order(CustID, OrderID, Items),
+	\+ is_member(Order, Acc),
+	!,
+	list_orders_helper(CustID, [Order|Acc], Orders).
+
+list_orders_helper(_, Orders, Orders).
+
+is_member(Item, [Item|_]).
+is_member(Item, [_|Tail]) :-
+	is_member(Item, Tail).
+
+
 %2nd query:
 
 customerIdByUsername(Username, CustID) :-       
@@ -76,6 +100,15 @@ whyToBoycott(ItemOrCompanyName, Justification):-
     getJustification(ItemOrCompanyName, Justification). % Get the justification for boycotting the company directly
 
 
+% Question 8: Remove boycott items from an order
+removeBoycottItemsFromAnOrder(Username, OrderID, NewList) :-
+    customer(CustomerID, Username),
+    order(CustomerID, OrderID, OrderList),
+    findall(Item, (member(Item, OrderList), \+ boycott_item(Item)), NewList).
+
+boycott_item(Item) :-
+    item(Item, Company, _),
+    boycott_company(Company, _).
 
 
 %9th query 
@@ -96,6 +129,12 @@ replaceBoycottItems([BoycottItem|Rest], [Alternative|NewRest]) :-
     replaceBoycottItems(Rest, NewRest).
 
 
+
+% Question 10: Calculate the price of an order after replacing boycott item.
+
+calcPriceAfterReplacingBoycottItemsFromAnOrder(Username, OrderID, NewList, TotalPrice):-
+    replaceBoycottItemsFromAnOrder(Username,OrderID,NewList),
+    calculateTotalPrice(NewList,0,TotalPrice).
 
 
 
@@ -126,6 +165,8 @@ add_boycott_company(CName,Just):-
 add_alternative(ItemName,AlternativeItem):-
 	assert(alternative(ItemName,AlternativeItem)).
 	
+
+
 
 
 
